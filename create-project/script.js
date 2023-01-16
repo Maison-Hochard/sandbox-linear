@@ -1,27 +1,56 @@
-require('console-stamp')(console, 'yyyy-mm-dd HH:MM:ss');
-require('dotenv').config();
+import commander from "commander";
+import dotenv from 'dotenv';
+dotenv.config();
 
-const commander = require("commander");
-const axios = require('axios');
+import { gql, GraphQLClient } from 'graphql-request';
 
-commander
-    .version("1.0.0")
+import { Command } from 'commander';
+const program = new Command();
+
+program
     .usage('[options]')
-    .option('-d, --demo <string>', 'exemple option')
+    .option('-t, --title <title>', 'Title of the ticket')
+    .option('-d, --description <description>', 'Description of the ticket')
     .parse(process.argv);
 
-const program = commander.opts();
+const options = program.opts();
 
-async function launchScript() {
-    const response = await axios.get('https://random-data-api.com/api/users/random_user');
-    console.log(response.data); // Ceci est un simple d'exemple d'appel API en utilisant axios
-    console.log(process.env.ENV_EXEMPLE); // Ceci est un simple d'exemple d'utilisation d'une variable d'environnement
-    console.log(program.demo); // Ceci est un simple d'exemple d'utilisation d'une option si la commande "node script.js -d test_string" est utilisée
+const graphQLClient = new GraphQLClient('https://api.linear.app/graphql', {
+    headers: {
+        contentType: 'application/json',
+        authorization: 'Bearer ' + process.env.TOKEN_API,
+    },
+});
+
+async function createTicket() {
+    const mutation = gql`mutation IssueCreate($teamId: String!, $projectId: String!, $title: String!, $description: String!) {
+        issueCreate(input: { teamId: $teamId, projectId: $projectId, title: $title, description: $description }) {
+            success
+            issue {
+                id
+                title
+            }
+        }
+    }`;
+    const variables = {
+        teamId: process.env.TEAM_ID,
+        projectId: process.env.PROJECT_ID,
+        title: options.title,
+        description: options.description,
+    }
+    const data = await graphQLClient.request(mutation, variables);
+    console.log(data);
+    return data;
 }
+
+ async function launchScript() {
+     await createTicket();
+ }
 
 launchScript()
     .then(_ => {
         console.log("Script ended");
+        ;
         process.exit();
     })
     .catch(e => {
