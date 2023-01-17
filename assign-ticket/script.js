@@ -9,8 +9,8 @@ const program = new Command();
 
 program
     .usage('[options]')
-    .option('-t, --title <title>', 'Title of the ticket')
-    .option('-d, --description <description>', 'Description of the ticket')
+    .option('-i, --issueID <issueID>', 'Issue ID')
+    .option('-a, --assign <assign>', 'New assignment')
     .parse(process.argv);
 
 const options = program.opts();
@@ -22,35 +22,39 @@ const graphQLClient = new GraphQLClient('https://api.linear.app/graphql', {
     },
 });
 
-async function createTicket() {
-    const mutation = gql`mutation IssueCreate($teamId: String!, $projectId: String!, $title: String!, $description: String!) {
-        issueCreate(input: { teamId: $teamId, projectId: $projectId, title: $title, description: $description }) {
+async function assignTicket() {
+    const mutation = gql`mutation AssignIssue($id: String!, $userId: String!, $teamId: String!, $projectId: String!) {
+        issueUpdate(
+            id: $id,
+            input: { assigneeId: $userId, teamId: $teamId, projectId: $projectId }
+        ) {
             success
             issue {
                 id
                 title
+                assigneeId
             }
         }
     }`;
     const variables = {
         teamId: process.env.TEAM_ID,
         projectId: process.env.PROJECT_ID,
-        title: options.title,
-        description: options.description,
+        id: options.issueID,
+        userId: options.assign,
     }
+    console.log(variables)
     const data = await graphQLClient.request(mutation, variables);
     console.log(data);
     return data;
 }
 
  async function launchScript() {
-     await createTicket();
+     await assignTicket();
  }
 
 launchScript()
     .then(_ => {
         console.log("Script ended");
-        ;
         process.exit();
     })
     .catch(e => {

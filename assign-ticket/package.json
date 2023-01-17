@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node script.js",
-    "start-args": "node script.js -t Test -d random"
+    "start-args": "node script.js -i 991bbeec-91f6-4c07-bf80-fe564235127d -a 1eb492e6-ca4b-4754-9ef5-47afaa648b72"
   },
   "author": "",
   "license": "ISC",
