@@ -9,8 +9,8 @@ const program = new Command();
 
 program
     .usage('[options]')
-    .option('-i, --issueID <issueID>', 'Issue ID')
-    .option('-a, --assign <assign>', 'New assignment')
+    .option('-i, --issueId <issueId>', 'Issue Id')
+    .option('-u, --userId <userId>', 'New User')
     .parse(process.argv);
 
 const options = program.opts();
@@ -26,21 +26,24 @@ async function assignTicket() {
     const mutation = gql`mutation AssignIssue($id: String!, $userId: String!, $teamId: String!, $projectId: String!) {
         issueUpdate(
             id: $id,
-            input: { assigneeId: $userId, teamId: $teamId, projectId: $projectId }
+            input: { 
+                assigneeId: $userId, 
+                teamId: $teamId, 
+                projectId: $projectId 
+            }
         ) {
             success
             issue {
                 id
                 title
-                assigneeId
             }
         }
     }`;
     const variables = {
         teamId: process.env.TEAM_ID,
         projectId: process.env.PROJECT_ID,
-        id: options.issueID,
-        userId: options.assign,
+        id: options.issueId,
+        userId: options.userId
     }
     console.log(variables)
     const data = await graphQLClient.request(mutation, variables);
