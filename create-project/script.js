@@ -9,7 +9,7 @@ const program = new Command();
 
 program
     .usage('[options]')
-    .option('-t, --title <title>', 'Title of the ticket')
+    .option('-n, --name <name>', 'Name of the Project')
     .option('-d, --description <description>', 'Description of the ticket')
     .parse(process.argv);
 
@@ -22,20 +22,25 @@ const graphQLClient = new GraphQLClient('https://api.linear.app/graphql', {
     },
 });
 
-async function createTicket() {
-    const mutation = gql`mutation IssueCreate($teamId: String!, $projectId: String!, $title: String!, $description: String!) {
-        issueCreate(input: { teamId: $teamId, projectId: $projectId, title: $title, description: $description }) {
+async function createProject() {
+    const mutation = gql`mutation CreateProject($name: String!, $description: String!, $teamId: [String!]!) {
+        projectCreate( 
+            input: {
+                teamIds: $teamId,
+                name: $name,
+                description: $description,
+                state: "started"
+            }) {
             success
-            issue {
+            project {
                 id
-                title
+                name
             }
         }
     }`;
     const variables = {
         teamId: process.env.TEAM_ID,
-        projectId: process.env.PROJECT_ID,
-        title: options.title,
+        name: options.name,
         description: options.description,
     }
     const data = await graphQLClient.request(mutation, variables);
@@ -44,7 +49,7 @@ async function createTicket() {
 }
 
  async function launchScript() {
-     await createTicket();
+     await createProject();
  }
 
 launchScript()
